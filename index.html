@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ツボり</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f5f5;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif}
+header{background:#111;color:white;padding:18px;text-align:center;font-size:28px;font-weight:800}
+header span{color:#ffd400}
+main{max-width:650px;margin:25px auto;padding:0 15px}
+.card{background:white;border-radius:16px;margin-bottom:20px;overflow:hidden;box-shadow:0 2px 12px #0001}
+img{width:100%;display:block}
+.body{padding:16px}
+.caption{font-size:21px;font-weight:800;margin-bottom:12px}
+.stars{display:flex;align-items:center}
+.star{border:0;background:none;font-size:32px;color:#ccc;padding:2px;cursor:pointer}
+.star.on{color:#f5b800}
+.score{margin-left:8px;color:#777}
+.post{background:#ffd400;border:0;border-radius:10px;padding:12px 18px;font-weight:bold;font-size:16px;cursor:pointer}
+dialog{border:0;border-radius:16px;width:90%;max-width:500px;padding:20px}
+input,textarea{width:100%;padding:12px;margin:8px 0 15px;border:1px solid #ddd;border-radius:10px;font-size:16px}
+textarea{height:100px}
+</style>
+</head>
+
+<body>
+<header>ツボ<span>り</span></header>
+
+<main>
+<div class="card">
+<div class="body">
+<h2>ようこそ、ツボりへ！</h2>
+<p>画像に一言つけて、みんなで笑おう。</p>
+<button class="post" onclick="document.querySelector('dialog').showModal()">＋ ボケる</button>
+</div>
+</div>
+
+<div id="posts"></div>
+</main>
+
+<dialog>
+<form method="dialog" id="form">
+<h2>新しいボケ</h2>
+
+<label>画像URL</label>
+<input id="image" placeholder="画像のURLを入力">
+
+<label>ひとこと</label>
+<textarea id="text" placeholder="この画像に一言！"></textarea>
+
+<button class="post" type="submit">投稿する</button>
+</form>
+</dialog>
+
+<script>
+let posts=JSON.parse(localStorage.getItem("tsubori")||"[]");
+
+function render(){
+ const area=document.getElementById("posts");
+ area.innerHTML="";
+
+ posts.forEach((p,i)=>{
+  const card=document.createElement("div");
+  card.className="card";
+  card.innerHTML=`
+  <img src="${p.image}" onerror="this.style.display='none'">
+  <div class="body">
+  <div class="caption">${escapeHTML(p.text)}</div>
+  <div class="stars">
+  ${[1,2,3,4,5].map(n=>
+    `<button class="star ${n<=p.rate?'on':''}" onclick="rate(${i},${n})">★</button>`
+  ).join("")}
+  <span class="score">${p.rate? p.rate+".0":"未評価"}</span>
+  </div>
+  </div>`;
+  area.appendChild(card);
+ });
+}
+
+function rate(i,n){
+ posts[i].rate=n;
+ localStorage.setItem("tsubori",JSON.stringify(posts));
+ render();
+}
+
+document.getElementById("form").onsubmit=function(){
+ const image=document.getElementById("image").value;
+ const text=document.getElementById("text").value;
+
+ if(!text)return;
+
+ posts.unshift({
+  image:image,
+  text:text,
+  rate:0
+ });
+
+ localStorage.setItem("tsubori",JSON.stringify(posts));
+ render();
+};
+
+function escapeHTML(s){
+ return s.replace(/[&<>"']/g,c=>({
+ "&":"&amp;",
+ "<":"&lt;",
+ ">":"&gt;",
+ '"':"&quot;",
+ "'":"&#039;"
+ }[c]));
+}
+
+render();
+</script>
+</body>
+</html>
